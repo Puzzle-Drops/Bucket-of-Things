@@ -1,0 +1,858 @@
+"""
+Tick Perfect Equipment Calculator
+Generates all armor and weapon stats based on OSRS BiS and exports to CSV.
+
+ARMOR Formulas:
+- Defence stats from OSRS BiS to Tier 3: IF(stat>0, stat/2, stat*1.2)
+- Tier 3: 100%, Tier 2: IF(stat>0, stat*0.8, stat*1.2), Tier 1: IF(stat>0, stat*0.6, stat*1.4)
+- Novice Tier 0: MAX(tier3_melee, tier3_ranged, tier3_magic) * 0.25
+- Prayer: hardcoded 9/6/3/0 for tiers 3/2/1/0 (only on cape, amulet, ring)
+- Distribution: weighted across 8 slots, floor each, excess to chest
+
+WEAPON Formulas:
+- T3: 110% (round UP), T2: 90% (round NEAREST), T1: 80% (round DOWN)
+- Negative stats scale inversely (divide by multiplier)
+- Prayer: fixed +3/+2/+1 per tier
+- Weapons/Ammo: all defenses = 0
+- Offhands: positive def / 2, negative def * 1.2
+"""
+
+import csv
+import math
+from dataclasses import dataclass, field
+from typing import Dict, List, Optional
+
+# =============================================================================
+# Constants
+# =============================================================================
+
+ALL_STATS = [
+    "stab_attack", "slash_attack", "crush_attack", "magic_attack", "ranged_attack",
+    "stab_defence", "slash_defence", "crush_defence", "magic_defence", "ranged_defence",
+    "melee_strength", "ranged_strength", "magic_strength", "prayer", "weight"
+]
+
+DEFENCE_STATS = ["stab_defence", "slash_defence", "crush_defence", "magic_defence", "ranged_defence"]
+ATTACK_STATS = ["stab_attack", "slash_attack", "crush_attack", "magic_attack", "ranged_attack"]
+STRENGTH_STATS = ["melee_strength", "ranged_strength", "magic_strength"]
+
+ARMOR_SLOTS = ["Head", "Chest", "Legs", "Feet", "Gloves", "Cape"]
+ACCESSORY_SLOTS = ["Amulet", "Ring"]
+ALL_SLOTS = ARMOR_SLOTS + ACCESSORY_SLOTS
+
+# =============================================================================
+# OSRS BiS Stats (full set totals)
+# =============================================================================
+
+OSRS_BIS = {
+    "Melee": {
+        "stab_attack": 80, "slash_attack": 117, "crush_attack": 78,
+        "magic_attack": -45, "ranged_attack": -51,
+        "stab_defence": 293, "slash_defence": 366, "crush_defence": 283,
+        "magic_defence": 9, "ranged_defence": 261,
+        "melee_strength": 72, "ranged_strength": 0, "magic_strength": 0,
+        "prayer": 4, "weight": 25
+    },
+    "Ranged": {
+        "stab_attack": -10, "slash_attack": -11, "crush_attack": -10,
+        "magic_attack": -6, "ranged_attack": 176,
+        "stab_defence": 153, "slash_defence": 149, "crush_defence": 170,
+        "magic_defence": 173, "ranged_defence": 221,
+        "melee_strength": 0, "ranged_strength": 72, "magic_strength": 0,
+        "prayer": 4, "weight": 15
+    },
+    "Magic": {
+        "stab_attack": -10, "slash_attack": -10, "crush_attack": -10,
+        "magic_attack": 152, "ranged_attack": -12,
+        "stab_defence": 134, "slash_defence": 127, "crush_defence": 146,
+        "magic_defence": 202, "ranged_defence": 72,
+        "melee_strength": 0, "ranged_strength": 0, "magic_strength": 28,
+        "prayer": 4, "weight": 10
+    }
+}
+
+# =============================================================================
+# Naming Configuration
+# =============================================================================
+
+SET_NAMES = {
+    "Melee": {1: "Sentinel", 2: "Vanguard", 3: "Ravager"},
+    "Ranged": {1: "Scout", 2: "Hunter", 3: "Reaper"},
+    "Magic": {1: "Initiate", 2: "Nova", 3: "Oblivion"},
+    "Novice": {0: "Novice"}
+}
+
+SLOT_NAMES = {
+    "Melee": {
+        "Head": "Helm", "Chest": "Chestplate", "Legs": "Platelegs",
+        "Feet": "Boots", "Gloves": "Gauntlets", "Cape": "Cape"
+    },
+    "Ranged": {
+        "Head": "Coif", "Chest": "Body", "Legs": "Chaps",
+        "Feet": "Boots", "Gloves": "Vambraces", "Cape": "Cloak"
+    },
+    "Magic": {
+        "Head": "Hood", "Chest": "Robe Top", "Legs": "Robe Bottom",
+        "Feet": "Slippers", "Gloves": "Sleeves", "Cape": "Mantle"
+    },
+    "Novice": {
+        "Head": "Cap", "Chest": "Vest", "Legs": "Pants",
+        "Feet": "Boots", "Gloves": "Gloves", "Cape": "Cloak"
+    }
+}
+
+ACCESSORY_NAMES = {
+    "Amulet": {1: "Amulet of Conviction", 2: "Amulet of Descent", 3: "Amulet of Madness"},
+    "Ring": {1: "Ring of Echoes", 2: "Ring of Whispers", 3: "Ring of Despair"}
+}
+
+NOVICE_ACCESSORY_NAMES = {
+    "Amulet": "Amulet of Beginning",
+    "Ring": "Ring of First Steps"
+}
+
+ACHIEVEMENT_CAPE_NAMES = {1: "Victor's Shroud", 2: "Slayer's Shroud", 3: "Champion's Shroud"}
+
+MODEL_INFO = {
+    "Melee": {
+        1: ("Sentinel", "Grey"),
+        2: ("Sentinel", "White"),
+        3: ("Nordic", "White/Brown")
+    },
+    "Ranged": {
+        1: ("Thief", "Brown"),
+        2: ("Thief", "Green"),
+        3: ("Reaper", "Green")
+    },
+    "Magic": {
+        1: ("Tomb Seeker", "Cyan"),
+        2: ("Tomb Seeker", "Purple"),
+        3: ("Shadow Mage", "Blue")
+    },
+    "Novice": {0: ("None", "None")}
+}
+
+# Weight per tier
+WEIGHT_PER_TIER = {0: 0.25, 1: 0.5, 2: 0.75, 3: 1.5}
+
+# Weighted distribution percentages
+WEIGHTS = {
+    "Head": 0.13,
+    "Chest": 0.18,
+    "Legs": 0.15,
+    "Feet": 0.10,
+    "Gloves": 0.075,
+    "Cape": 0.125,
+    "Amulet": 0.12,
+    "Ring": 0.12
+}
+
+# =============================================================================
+# Data Classes
+# =============================================================================
+
+@dataclass
+class Item:
+    tier: int
+    style: str
+    set_name: str
+    slot: str
+    item_name: str
+    stats: Dict[str, float]
+    model_name: str = ""
+    model_color: str = ""
+
+# =============================================================================
+# Armor Calculation Functions
+# =============================================================================
+
+def apply_defence_formula(stats: Dict[str, float]) -> Dict[str, float]:
+    """OSRS BiS -> Tier 3 base. Defence: positive/2, negative*1.2. Others unchanged."""
+    result = {}
+    for stat, value in stats.items():
+        if stat in DEFENCE_STATS:
+            result[stat] = value / 2 if value > 0 else value * 1.2
+        else:
+            result[stat] = value
+    return result
+
+
+def apply_tier_scaling(stats: Dict[str, float], tier: int) -> Dict[str, float]:
+    """Scale stats based on tier. T3=100%, T2=80%/1.2x, T1=60%/1.4x."""
+    result = {}
+    for stat, value in stats.items():
+        if stat == "prayer":
+            result[stat] = {3: 9, 2: 6, 1: 3, 0: 0}.get(tier, 0)
+        elif stat == "weight":
+            result[stat] = WEIGHT_PER_TIER.get(tier, 1.0)
+        elif tier == 3:
+            result[stat] = value
+        elif tier == 2:
+            result[stat] = value * 0.8 if value > 0 else value * 1.2
+        elif tier == 1:
+            result[stat] = value * 0.6 if value > 0 else value * 1.4
+        else:
+            result[stat] = value
+    return result
+
+
+def distribute_stats_to_items(total_stats: Dict[str, float], tier: int) -> Dict[str, Dict[str, float]]:
+    """Distribute total set stats across 8 slots with weighted distribution.
+    Floor each piece, accumulate excess onto Chest.
+    Prayer only on Cape, Amulet, Ring."""
+    items = {slot: {} for slot in ALL_SLOTS}
+
+    for stat in ALL_STATS:
+        total = total_stats.get(stat, 0)
+
+        if stat == "prayer":
+            prayer_per_item = {3: 3, 2: 2, 1: 1, 0: 0}.get(tier, 0)
+            for slot in ALL_SLOTS:
+                items[slot][stat] = prayer_per_item if slot in ["Cape", "Amulet", "Ring"] else 0
+            continue
+
+        if stat == "weight":
+            for slot in ALL_SLOTS:
+                items[slot][stat] = WEIGHT_PER_TIER.get(tier, 1.0)
+            continue
+
+        floored_values = {}
+        total_floored = 0
+        for slot in ALL_SLOTS:
+            weighted_value = total * WEIGHTS[slot]
+            floored = math.floor(weighted_value)
+            floored_values[slot] = floored
+            total_floored += floored
+
+        excess = total - total_floored
+        for slot in ALL_SLOTS:
+            items[slot][stat] = floored_values[slot]
+        items["Chest"][stat] += round(excess)
+
+    return items
+
+
+def calculate_novice_stats(tier3_stats: Dict[str, Dict[str, float]]) -> Dict[str, float]:
+    """Novice T0: MAX across all 3 styles' T3 stats * 0.25. Prayer=0."""
+    result = {}
+    for stat in ALL_STATS:
+        if stat == "prayer":
+            result[stat] = 0
+        elif stat == "weight":
+            result[stat] = WEIGHT_PER_TIER[0]
+        else:
+            max_val = max(tier3_stats[style].get(stat, 0) for style in ["Melee", "Ranged", "Magic"])
+            result[stat] = max_val * 0.25
+    return result
+
+
+def create_tribrid_accessory_stats(style_distributed: Dict[str, Dict[int, Dict[str, Dict[str, float]]]],
+                                     slot: str, tier: int) -> Dict[str, float]:
+    """Create tribrid amulet/ring: strip defense, 150% offense, combine all styles."""
+    result = {stat: 0 for stat in ALL_STATS}
+    for style in ["Melee", "Ranged", "Magic"]:
+        accessory = style_distributed[style][tier][slot]
+        for stat, value in accessory.items():
+            if stat in DEFENCE_STATS:
+                continue  # strip defense
+            if stat in ATTACK_STATS or stat in STRENGTH_STATS:
+                result[stat] += value * 1.5  # 150% offensive
+            elif stat == "prayer":
+                result[stat] = max(result[stat], value)  # take best prayer
+            elif stat == "weight":
+                result[stat] = WEIGHT_PER_TIER.get(tier, 1.0)
+            else:
+                result[stat] += value
+    return result
+
+
+def create_achievement_cape(style_distributed: Dict[str, Dict[int, Dict[str, Dict[str, float]]]],
+                             tier: int) -> Dict[str, float]:
+    """Achievement cape: best stat from each style's same-tier cape."""
+    result = {}
+    for stat in ALL_STATS:
+        if stat == "weight":
+            result[stat] = WEIGHT_PER_TIER.get(tier, 1.0)
+        else:
+            best = max(style_distributed[style][tier]["Cape"].get(stat, 0)
+                       for style in ["Melee", "Ranged", "Magic"])
+            result[stat] = best
+    return result
+
+
+# =============================================================================
+# Generate All Armor Items
+# =============================================================================
+
+def generate_all_armor():
+    """Generate all armor items."""
+    all_items = []
+    
+    # Calculate tier 3 base for each style
+    tier3_bases = {}
+    for style in ["Melee", "Ranged", "Magic"]:
+        tier3_bases[style] = apply_defence_formula(OSRS_BIS[style])
+
+    # Calculate all tiers and distribute
+    style_distributed = {}  # style -> tier -> slot -> stats
+    tier3_set_totals = {}
+    
+    for style in ["Melee", "Ranged", "Magic"]:
+        style_distributed[style] = {}
+        for tier in [3, 2, 1]:
+            scaled = apply_tier_scaling(tier3_bases[style], tier)
+            distributed = distribute_stats_to_items(scaled, tier)
+            style_distributed[style][tier] = distributed
+            
+            if tier == 3:
+                tier3_set_totals[style] = scaled
+
+            set_name = SET_NAMES[style][tier]
+            model_name, model_color = MODEL_INFO[style][tier]
+
+            for slot in ARMOR_SLOTS:
+                slot_suffix = SLOT_NAMES[style][slot]
+                item_name = f"{set_name} {slot_suffix}"
+                rounded_stats = {k: round(v) for k, v in distributed[slot].items()}
+                all_items.append(Item(
+                    tier=tier, style=style, set_name=set_name, slot=slot,
+                    item_name=item_name, stats=rounded_stats,
+                    model_name=model_name, model_color=model_color
+                ))
+
+    # Generate tribrid accessories
+    for tier in [3, 2, 1]:
+        for slot in ACCESSORY_SLOTS:
+            acc_stats = create_tribrid_accessory_stats(style_distributed, slot, tier)
+            rounded_stats = {k: round(v) for k, v in acc_stats.items()}
+            item_name = ACCESSORY_NAMES[slot][tier]
+            all_items.append(Item(
+                tier=tier, style="Tribrid", set_name="Tribrid", slot=slot,
+                item_name=item_name, stats=rounded_stats,
+                model_name="None", model_color="None"
+            ))
+
+    # Generate achievement capes
+    for tier in [3, 2, 1]:
+        cape_stats = create_achievement_cape(style_distributed, tier)
+        rounded_stats = {k: round(v) for k, v in cape_stats.items()}
+        all_items.append(Item(
+            tier=tier, style="Tribrid", set_name="Achievement", slot="Cape",
+            item_name=ACHIEVEMENT_CAPE_NAMES[tier], stats=rounded_stats,
+            model_name="None", model_color="None"
+        ))
+
+    # Generate Novice (Tier 0) set
+    novice_total = calculate_novice_stats(tier3_set_totals)
+    novice_distributed = distribute_stats_to_items(novice_total, 0)
+    
+    for slot in ARMOR_SLOTS:
+        slot_suffix = SLOT_NAMES["Novice"][slot]
+        item_name = f"Novice {slot_suffix}"
+        rounded_stats = {k: round(v) for k, v in novice_distributed[slot].items()}
+        all_items.append(Item(
+            tier=0, style="Novice", set_name="Novice", slot=slot,
+            item_name=item_name, stats=rounded_stats,
+            model_name="None", model_color="None"
+        ))
+    
+    for slot in ACCESSORY_SLOTS:
+        item_name = NOVICE_ACCESSORY_NAMES[slot]
+        rounded_stats = {k: round(v) for k, v in novice_distributed[slot].items()}
+        all_items.append(Item(
+            tier=0, style="Novice", set_name="Novice", slot=slot,
+            item_name=item_name, stats=rounded_stats,
+            model_name="None", model_color="None"
+        ))
+
+    return all_items, tier3_bases, style_distributed
+
+
+# =============================================================================
+# Weapon Data & Calculation
+# =============================================================================
+
+WEAPON_STATS = [
+    "stab_attack", "slash_attack", "crush_attack", "magic_attack", "ranged_attack",
+    "stab_defence", "slash_defence", "crush_defence", "magic_defence", "ranged_defence",
+    "melee_strength", "ranged_strength", "magic_damage", "prayer",
+    "attack_speed", "attack_range", "special_cost"
+]
+
+WEAPON_SCALING_STATS = [
+    "stab_attack", "slash_attack", "crush_attack", "magic_attack", "ranged_attack",
+    "melee_strength", "ranged_strength", "magic_damage"
+]
+
+WEAPON_DEFENSE_STATS = ["stab_defence", "slash_defence", "crush_defence", "magic_defence", "ranged_defence"]
+
+WEAPON_TIER_PREFIXES = {
+    "melee": {1: "Sentinel", 2: "Vanguard", 3: "Ravager"},
+    "ranged": {1: "Scout", 2: "Hunter", 3: "Reaper"},
+    "magic": {1: "Initiate", 2: "Nova", 3: "Oblivion"}
+}
+
+# Baseline weapon data: OSRS stats with defenses already processed
+BASELINE_WEAPONS = [
+    # MELEE
+    {"name": "Quickblade", "osrs": "Swift Blade", "style": "melee", "slot": "weapon (1h)",
+     "stab_attack": 0, "slash_attack": 0, "crush_attack": 0, "magic_attack": 0, "ranged_attack": 0,
+     "stab_defence": 0, "slash_defence": 0, "crush_defence": 0, "magic_defence": 0, "ranged_defence": 0,
+     "melee_strength": 0, "ranged_strength": 0, "magic_damage": 0, "prayer": 0,
+     "attack_speed": 3, "attack_range": 1, "special_cost": 0,
+     "notes": "Fastest melee (3-tick); no base stat bonuses; gets +1/+2/+3 per tier"},
+    
+    {"name": "Moonblade", "osrs": "Blade of Saeldor", "style": "melee", "slot": "weapon (1h)",
+     "stab_attack": 55, "slash_attack": 94, "crush_attack": 0, "magic_attack": 0, "ranged_attack": 0,
+     "stab_defence": 0, "slash_defence": 0, "crush_defence": 0, "magic_defence": 0, "ranged_defence": 0,
+     "melee_strength": 89, "ranged_strength": 0, "magic_damage": 0, "prayer": 0,
+     "attack_speed": 4, "attack_range": 1, "special_cost": 0,
+     "notes": "BiS slash 1H weapon"},
+    
+    {"name": "Jaggstab", "osrs": "Osmumten's Fang", "style": "melee", "slot": "weapon (1h)",
+     "stab_attack": 105, "slash_attack": 75, "crush_attack": 0, "magic_attack": 0, "ranged_attack": 0,
+     "stab_defence": 0, "slash_defence": 0, "crush_defence": 0, "magic_defence": 0, "ranged_defence": 0,
+     "melee_strength": 103, "ranged_strength": 0, "magic_damage": 0, "prayer": 0,
+     "attack_speed": 5, "attack_range": 1, "special_cost": 0,
+     "notes": "Double accuracy roll; damage 15-85% of max; NO SPEC"},
+    
+    {"name": "Glaive", "osrs": "Noxious Halberd", "style": "melee", "slot": "weapon (2h)",
+     "stab_attack": 80, "slash_attack": 132, "crush_attack": 0, "magic_attack": 0, "ranged_attack": 0,
+     "stab_defence": 0, "slash_defence": 0, "crush_defence": 0, "magic_defence": 0, "ranged_defence": 0,
+     "melee_strength": 142, "ranged_strength": 0, "magic_damage": 0, "prayer": 0,
+     "attack_speed": 5, "attack_range": 2, "special_cost": 0,
+     "notes": "5-tick halberd; 33% envenom chance; NO SPEC"},
+    
+    {"name": "Deathsweep", "osrs": "Scythe of Vitur", "style": "melee", "slot": "weapon (2h)",
+     "stab_attack": 70, "slash_attack": 125, "crush_attack": 30, "magic_attack": -6, "ranged_attack": 0,
+     "stab_defence": 0, "slash_defence": 0, "crush_defence": 0, "magic_defence": 0, "ranged_defence": 0,
+     "melee_strength": 75, "ranged_strength": 0, "magic_damage": 0, "prayer": 0,
+     "attack_speed": 5, "attack_range": 1, "special_cost": 0,
+     "notes": "Multi-hit 3 targets 100/50/25% damage; NO SPEC"},
+    
+    {"name": "Dueling Dagger", "osrs": "Dragon Dagger", "style": "melee", "slot": "weapon (1h)",
+     "stab_attack": 40, "slash_attack": 25, "crush_attack": -4, "magic_attack": 1, "ranged_attack": 0,
+     "stab_defence": 0, "slash_defence": 0, "crush_defence": 0, "magic_defence": 0, "ranged_defence": 0,
+     "melee_strength": 40, "ranged_strength": 0, "magic_damage": 0, "prayer": 0,
+     "attack_speed": 4, "attack_range": 1, "special_cost": 25,
+     "notes": "Spec: 2x hits +15% acc +15% dmg each"},
+    
+    {"name": "Reachblade", "osrs": "Crystal Halberd", "style": "melee", "slot": "weapon (2h)",
+     "stab_attack": 85, "slash_attack": 110, "crush_attack": 5, "magic_attack": -4, "ranged_attack": 0,
+     "stab_defence": 0, "slash_defence": 0, "crush_defence": 0, "magic_defence": 0, "ranged_defence": 0,
+     "melee_strength": 118, "ranged_strength": 0, "magic_damage": 0, "prayer": 0,
+     "attack_speed": 7, "attack_range": 2, "special_cost": 30,
+     "notes": "Spec: +10% dmg, 2x on large monsters"},
+    
+    {"name": "Rippers", "osrs": "Dragon Claws", "style": "melee", "slot": "weapon (2h)",
+     "stab_attack": 41, "slash_attack": 57, "crush_attack": -4, "magic_attack": 0, "ranged_attack": 0,
+     "stab_defence": 0, "slash_defence": 0, "crush_defence": 0, "magic_defence": 0, "ranged_defence": 0,
+     "melee_strength": 56, "ranged_strength": 0, "magic_damage": 0, "prayer": 0,
+     "attack_speed": 4, "attack_range": 1, "special_cost": 50,
+     "notes": "Spec: 4x hits with 4-2-1-1 damage split"},
+    
+    {"name": "Guardbane", "osrs": "Bandos Godsword", "style": "melee", "slot": "weapon (2h)",
+     "stab_attack": 0, "slash_attack": 132, "crush_attack": 80, "magic_attack": 0, "ranged_attack": 0,
+     "stab_defence": 0, "slash_defence": 0, "crush_defence": 0, "magic_defence": 0, "ranged_defence": 0,
+     "melee_strength": 132, "ranged_strength": 0, "magic_damage": 0, "prayer": 8,
+     "attack_speed": 6, "attack_range": 1, "special_cost": 50,
+     "notes": "Spec: +21% dmg, drains combat stats = damage"},
+    
+    {"name": "Divineblade", "osrs": "Saradomin Godsword", "style": "melee", "slot": "weapon (2h)",
+     "stab_attack": 0, "slash_attack": 132, "crush_attack": 80, "magic_attack": 0, "ranged_attack": 0,
+     "stab_defence": 0, "slash_defence": 0, "crush_defence": 0, "magic_defence": 0, "ranged_defence": 0,
+     "melee_strength": 132, "ranged_strength": 0, "magic_damage": 0, "prayer": 8,
+     "attack_speed": 6, "attack_range": 1, "special_cost": 50,
+     "notes": "Spec: +10% dmg, heals 50% damage, restores 25% as spirit"},
+    
+    {"name": "Titanbreaker", "osrs": "Elder Maul", "style": "melee", "slot": "weapon (2h)",
+     "stab_attack": 0, "slash_attack": 0, "crush_attack": 135, "magic_attack": 0, "ranged_attack": 0,
+     "stab_defence": 0, "slash_defence": 0, "crush_defence": 0, "magic_defence": 0, "ranged_defence": 0,
+     "melee_strength": 147, "ranged_strength": 0, "magic_damage": 0, "prayer": 0,
+     "attack_speed": 6, "attack_range": 1, "special_cost": 50,
+     "notes": "Spec: +25% acc, -35% target Defence"},
+    
+    {"name": "Aegis", "osrs": "Avernic Defender", "style": "melee", "slot": "shield (1h)",
+     "stab_attack": 30, "slash_attack": 29, "crush_attack": 28, "magic_attack": -5, "ranged_attack": -4,
+     "stab_defence": 30, "slash_defence": 29, "crush_defence": 28, "magic_defence": -3, "ranged_defence": -2,
+     "melee_strength": 8, "ranged_strength": 0, "magic_damage": 0, "prayer": 0,
+     "attack_speed": 0, "attack_range": 0, "special_cost": 0,
+     "notes": "BiS melee offhand"},
+    
+    # RANGED
+    {"name": "Arrows (Arrows)", "osrs": "Ammo (Arrows)", "style": "ranged", "slot": "ammo",
+     "stab_attack": 0, "slash_attack": 0, "crush_attack": 0, "magic_attack": 0, "ranged_attack": 0,
+     "stab_defence": 0, "slash_defence": 0, "crush_defence": 0, "magic_defence": 0, "ranged_defence": 0,
+     "melee_strength": 0, "ranged_strength": 60, "magic_damage": 0, "prayer": 0,
+     "attack_speed": 0, "attack_range": 0, "special_cost": 0,
+     "notes": "Dragon arrows; for bows"},
+    
+    {"name": "Arrows (Bolts)", "osrs": "Ammo (Bolts)", "style": "ranged", "slot": "ammo",
+     "stab_attack": 0, "slash_attack": 0, "crush_attack": 0, "magic_attack": 0, "ranged_attack": 0,
+     "stab_defence": 0, "slash_defence": 0, "crush_defence": 0, "magic_defence": 0, "ranged_defence": 0,
+     "melee_strength": 0, "ranged_strength": 122, "magic_damage": 0, "prayer": 0,
+     "attack_speed": 0, "attack_range": 0, "special_cost": 0,
+     "notes": "Dragon bolts; for crossbows"},
+    
+    {"name": "Arrows (Darts)", "osrs": "Ammo (Darts)", "style": "ranged", "slot": "ammo",
+     "stab_attack": 0, "slash_attack": 0, "crush_attack": 0, "magic_attack": 0, "ranged_attack": 0,
+     "stab_defence": 0, "slash_defence": 0, "crush_defence": 0, "magic_defence": 0, "ranged_defence": 0,
+     "melee_strength": 0, "ranged_strength": 35, "magic_damage": 0, "prayer": 0,
+     "attack_speed": 0, "attack_range": 0, "special_cost": 0,
+     "notes": "Dragon darts; for blowpipe"},
+    
+    {"name": "Quickbow", "osrs": "Toxic Blowpipe", "style": "ranged", "slot": "weapon (2h)",
+     "stab_attack": 0, "slash_attack": 0, "crush_attack": 0, "magic_attack": 0, "ranged_attack": 30,
+     "stab_defence": 0, "slash_defence": 0, "crush_defence": 0, "magic_defence": 0, "ranged_defence": 0,
+     "melee_strength": 0, "ranged_strength": 20, "magic_damage": 0, "prayer": 0,
+     "attack_speed": 3, "attack_range": 5, "special_cost": 0,
+     "notes": "Fastest ranged (3-tick); NO SPEC"},
+    
+    {"name": "Windbow", "osrs": "Webweaver Bow", "style": "ranged", "slot": "weapon (2h)",
+     "stab_attack": 0, "slash_attack": 0, "crush_attack": 0, "magic_attack": 0, "ranged_attack": 70,
+     "stab_defence": 0, "slash_defence": 0, "crush_defence": 0, "magic_defence": 0, "ranged_defence": 0,
+     "melee_strength": 0, "ranged_strength": 0, "magic_damage": 0, "prayer": 0,
+     "attack_speed": 4, "attack_range": 10, "special_cost": 0,
+     "notes": "4-tick shortbow; NO SPEC"},
+    
+    {"name": "Moonbow", "osrs": "Bow of Faerdhinen", "style": "ranged", "slot": "weapon (2h)",
+     "stab_attack": 0, "slash_attack": 0, "crush_attack": 0, "magic_attack": 0, "ranged_attack": 128,
+     "stab_defence": 0, "slash_defence": 0, "crush_defence": 0, "magic_defence": 0, "ranged_defence": 0,
+     "melee_strength": 0, "ranged_strength": 106, "magic_damage": 0, "prayer": 0,
+     "attack_speed": 5, "attack_range": 10, "special_cost": 0,
+     "notes": "Crystal bow; built-in ammo"},
+    
+    {"name": "Deathshot", "osrs": "Twisted Bow", "style": "ranged", "slot": "weapon (2h)",
+     "stab_attack": 0, "slash_attack": 0, "crush_attack": 0, "magic_attack": 0, "ranged_attack": 70,
+     "stab_defence": 0, "slash_defence": 0, "crush_defence": 0, "magic_defence": 0, "ranged_defence": 0,
+     "melee_strength": 0, "ranged_strength": 20, "magic_damage": 0, "prayer": 4,
+     "attack_speed": 5, "attack_range": 10, "special_cost": 0,
+     "notes": "Scales accuracy/damage with target magic level"},
+    
+    {"name": "Scatterboom", "osrs": "Black Chinchompa", "style": "ranged", "slot": "weapon (2h)",
+     "stab_attack": 0, "slash_attack": 0, "crush_attack": 0, "magic_attack": 0, "ranged_attack": 80,
+     "stab_defence": 0, "slash_defence": 0, "crush_defence": 0, "magic_defence": 0, "ranged_defence": 0,
+     "melee_strength": 0, "ranged_strength": 30, "magic_damage": 0, "prayer": 0,
+     "attack_speed": 3, "attack_range": 9, "special_cost": 50,
+     "notes": "AoE; Spec: delayed 4-tick detonation 2x damage"},
+    
+    {"name": "Crackshot", "osrs": "Tonalztics of Ralos", "style": "ranged", "slot": "weapon (2h)",
+     "stab_attack": 0, "slash_attack": 0, "crush_attack": 0, "magic_attack": 0, "ranged_attack": 90,
+     "stab_defence": 0, "slash_defence": 0, "crush_defence": 0, "magic_defence": 0, "ranged_defence": 0,
+     "melee_strength": 0, "ranged_strength": 75, "magic_damage": 0, "prayer": 0,
+     "attack_speed": 4, "attack_range": 6, "special_cost": 50,
+     "notes": "Spec: reduces target defenses"},
+    
+    {"name": "Razors", "osrs": "Dragon Knives", "style": "ranged", "slot": "weapon (1h)",
+     "stab_attack": 0, "slash_attack": 0, "crush_attack": 0, "magic_attack": 0, "ranged_attack": 28,
+     "stab_defence": 0, "slash_defence": 0, "crush_defence": 0, "magic_defence": 0, "ranged_defence": 0,
+     "melee_strength": 0, "ranged_strength": 30, "magic_damage": 0, "prayer": 0,
+     "attack_speed": 3, "attack_range": 4, "special_cost": 25,
+     "notes": "Fast thrown; spec: 2x hits +25% acc"},
+    
+    {"name": "Stillshot", "osrs": "Scorching Bow", "style": "ranged", "slot": "weapon (2h)",
+     "stab_attack": 0, "slash_attack": 0, "crush_attack": 0, "magic_attack": 0, "ranged_attack": 69,
+     "stab_defence": 0, "slash_defence": 0, "crush_defence": 0, "magic_defence": 0, "ranged_defence": 0,
+     "melee_strength": 0, "ranged_strength": 0, "magic_damage": 0, "prayer": 0,
+     "attack_speed": 5, "attack_range": 10, "special_cost": 25,
+     "notes": "Spec: freezes target 10 ticks; no passive"},
+    
+    {"name": "Aimguard", "osrs": "Twisted Buckler", "style": "ranged", "slot": "shield (1h)",
+     "stab_attack": -8, "slash_attack": -9, "crush_attack": -11, "magic_attack": 0, "ranged_attack": 10,
+     "stab_defence": -8, "slash_defence": -9, "crush_defence": -11, "magic_defence": 48, "ranged_defence": -7,
+     "melee_strength": 0, "ranged_strength": 0, "magic_damage": 0, "prayer": 0,
+     "attack_speed": 0, "attack_range": 0, "special_cost": 0,
+     "notes": "BiS ranged offhand"},
+    
+    # MAGIC
+    {"name": "Quickstave", "osrs": "Eye of Ayak", "style": "magic", "slot": "weapon (1h)",
+     "stab_attack": 0, "slash_attack": 0, "crush_attack": 0, "magic_attack": 16, "ranged_attack": 0,
+     "stab_defence": 0, "slash_defence": 0, "crush_defence": 0, "magic_defence": 0, "ranged_defence": 0,
+     "melee_strength": 0, "ranged_strength": 0, "magic_damage": 0, "prayer": 0,
+     "attack_speed": 3, "attack_range": 8, "special_cost": 0,
+     "notes": "Fastest magic (3-tick); powered staff"},
+    
+    {"name": "Moonstave", "osrs": "Sanguinesti Staff", "style": "magic", "slot": "weapon (1h)",
+     "stab_attack": 0, "slash_attack": 0, "crush_attack": 0, "magic_attack": 25, "ranged_attack": 0,
+     "stab_defence": 0, "slash_defence": 0, "crush_defence": 0, "magic_defence": 0, "ranged_defence": 0,
+     "melee_strength": 0, "ranged_strength": 0, "magic_damage": 0, "prayer": 0,
+     "attack_speed": 4, "attack_range": 8, "special_cost": 0,
+     "notes": "Powered staff; scales with magic level; NO healing passive"},
+    
+    {"name": "Deathknell", "osrs": "Tumeken's Shadow", "style": "magic", "slot": "weapon (2h)",
+     "stab_attack": 0, "slash_attack": 0, "crush_attack": 0, "magic_attack": 35, "ranged_attack": 0,
+     "stab_defence": 0, "slash_defence": 0, "crush_defence": 0, "magic_defence": 0, "ranged_defence": 0,
+     "melee_strength": 0, "ranged_strength": 0, "magic_damage": 0, "prayer": 0,
+     "attack_speed": 5, "attack_range": 8, "special_cost": 0,
+     "notes": "3x magic gear bonus; most powerful magic weapon"},
+    
+    {"name": "Kaster", "osrs": "Kodai Wand", "style": "magic", "slot": "weapon (2h)",
+     "stab_attack": 0, "slash_attack": 0, "crush_attack": 0, "magic_attack": 28, "ranged_attack": 0,
+     "stab_defence": 0, "slash_defence": 0, "crush_defence": 0, "magic_defence": 0, "ranged_defence": 0,
+     "melee_strength": 0, "ranged_strength": 0, "magic_damage": 15, "prayer": 0,
+     "attack_speed": 4, "attack_range": 8, "special_cost": 0,
+     "notes": "BiS autocast wand; saves runes"},
+    
+    {"name": "Hexsceptre", "osrs": "Accursed Sceptre", "style": "magic", "slot": "weapon (1h)",
+     "stab_attack": 0, "slash_attack": 0, "crush_attack": 0, "magic_attack": 20, "ranged_attack": 0,
+     "stab_defence": 0, "slash_defence": 0, "crush_defence": 0, "magic_defence": 0, "ranged_defence": 0,
+     "melee_strength": 0, "ranged_strength": 0, "magic_damage": 0, "prayer": 0,
+     "attack_speed": 4, "attack_range": 8, "special_cost": 50,
+     "notes": "Powered; spec drains def/magic"},
+    
+    {"name": "Soulstave", "osrs": "Eldritch Nightmare Staff", "style": "magic", "slot": "weapon (2h)",
+     "stab_attack": 0, "slash_attack": 0, "crush_attack": 0, "magic_attack": 16, "ranged_attack": 0,
+     "stab_defence": 0, "slash_defence": 0, "crush_defence": 0, "magic_defence": 0, "ranged_defence": 0,
+     "melee_strength": 0, "ranged_strength": 0, "magic_damage": 15, "prayer": 0,
+     "attack_speed": 5, "attack_range": 8, "special_cost": 55,
+     "notes": "Spec: restores spirit based on damage"},
+    
+    {"name": "Blastrod", "osrs": "Volatile Nightmare Staff", "style": "magic", "slot": "weapon (2h)",
+     "stab_attack": 0, "slash_attack": 0, "crush_attack": 0, "magic_attack": 16, "ranged_attack": 0,
+     "stab_defence": 0, "slash_defence": 0, "crush_defence": 0, "magic_defence": 0, "ranged_defence": 0,
+     "melee_strength": 0, "ranged_strength": 0, "magic_damage": 15, "prayer": 0,
+     "attack_speed": 5, "attack_range": 8, "special_cost": 55,
+     "notes": "Spec: high burst magic damage"},
+    
+    {"name": "Spellward", "osrs": "Fortified Elidinis Ward", "style": "magic", "slot": "shield (1h)",
+     "stab_attack": 0, "slash_attack": 0, "crush_attack": 0, "magic_attack": 25, "ranged_attack": 0,
+     "stab_defence": 53, "slash_defence": 55, "crush_defence": 73, "magic_defence": 2, "ranged_defence": 52,
+     "melee_strength": 0, "ranged_strength": 0, "magic_damage": 5, "prayer": 0,
+     "attack_speed": 0, "attack_range": 0, "special_cost": 0,
+     "notes": "BiS magic offhand"},
+]
+
+
+def process_weapon_defenses(weapon: dict) -> dict:
+    """Process weapon defenses: weapons/ammo -> 0, offhands -> halve pos, 1.2x neg."""
+    result = weapon.copy()
+    slot = weapon.get("slot", "")
+    
+    if "shield" in slot.lower():
+        for stat in WEAPON_DEFENSE_STATS:
+            val = weapon.get(stat, 0)
+            if val > 0:
+                result[stat] = round(val / 2)
+            elif val < 0:
+                result[stat] = round(val * 1.2)
+    elif "weapon" in slot.lower() or "ammo" in slot.lower():
+        for stat in WEAPON_DEFENSE_STATS:
+            result[stat] = 0
+    
+    return result
+
+
+def scale_weapon_stat(base_value, multiplier, round_func):
+    """Scale a weapon stat. Positive: multiply. Negative: divide (inverse)."""
+    if base_value == 0:
+        return 0
+    elif base_value > 0:
+        return round_func(base_value * multiplier)
+    else:
+        return round_func(base_value / multiplier)
+
+
+def generate_tiered_weapons():
+    """Generate all tiered weapon variants."""
+    all_weapons = []
+    
+    tier_config = {
+        1: {"mult": 0.80, "round": math.floor, "prayer": 1, "label": "T1 (80%)"},
+        2: {"mult": 0.90, "round": round, "prayer": 2, "label": "T2 (90%)"},
+        3: {"mult": 1.10, "round": math.ceil, "prayer": 3, "label": "T3 (110%)"},
+    }
+    
+    for weapon in BASELINE_WEAPONS:
+        # Process baseline defenses
+        processed = process_weapon_defenses(weapon)
+        
+        for tier, config in tier_config.items():
+            w = processed.copy()
+            prefix = WEAPON_TIER_PREFIXES[weapon["style"]][tier]
+            
+            # Handle ammo naming specially
+            base_name = weapon["name"]
+            if "Arrows (" in base_name:
+                ammo_type = base_name.split("(")[1].rstrip(")")
+                w["item_name"] = f"{prefix} Arrows ({ammo_type})"
+            else:
+                w["item_name"] = f"{prefix} {base_name}"
+            
+            w["tier"] = tier
+            w["base_name"] = base_name
+            w["notes"] = f"{config['label']}: {weapon['notes']}"
+            w["prayer"] = config["prayer"]
+            
+            # Scale offensive stats
+            for stat in WEAPON_SCALING_STATS:
+                base_val = processed.get(stat, 0)
+                w[stat] = scale_weapon_stat(base_val, config["mult"], config["round"])
+            
+            # Special case: Quickblade (Swift Blade) gets +tier to melee attacks/strength
+            if weapon["name"] == "Quickblade":
+                w["stab_attack"] = tier
+                w["slash_attack"] = tier
+                w["crush_attack"] = tier
+                w["melee_strength"] = tier
+            
+            all_weapons.append(w)
+    
+    return all_weapons
+
+
+# =============================================================================
+# CSV Export
+# =============================================================================
+
+def export_armor_csv(filename: str):
+    """Export all armor items to CSV."""
+    items, tier3_bases, style_distributed = generate_all_armor()
+    
+    headers = ["Tier", "Style", "Set Name", "Slot", "Item Name"] + ALL_STATS + ["Model", "Color"]
+    
+    with open(filename, 'w', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(headers)
+        
+        # OSRS BiS Reference
+        writer.writerow(["=== OSRS BiS Reference ==="])
+        for style in ["Melee", "Ranged", "Magic"]:
+            row = ["BiS", style, f"OSRS {style} BiS", "Set Total", f"OSRS {style} BiS"]
+            for stat in ALL_STATS:
+                row.append(OSRS_BIS[style].get(stat, 0))
+            row += ["", ""]
+            writer.writerow(row)
+        
+        # Tier 3 Base Reference
+        writer.writerow([])
+        writer.writerow(["=== Tier 3 Base (Defence Halved) ==="])
+        for style in ["Melee", "Ranged", "Magic"]:
+            base = tier3_bases[style]
+            row = ["T3 Base", style, f"TP {style} T3", "Set Total", f"TP {style} Tier 3 Base"]
+            for stat in ALL_STATS:
+                row.append(round(base.get(stat, 0), 2))
+            m, c = MODEL_INFO[style][3]
+            row += [m, c]
+            writer.writerow(row)
+        
+        # Individual Items grouped by style and tier
+        writer.writerow([])
+        writer.writerow(["=== Individual Items ==="])
+        
+        slot_order = ["Head", "Chest", "Legs", "Feet", "Gloves", "Cape", "Amulet", "Ring"]
+        
+        # Novice first
+        writer.writerow([])
+        writer.writerow(["--- NOVICE ---"])
+        novice_items = [i for i in items if i.style == "Novice"]
+        novice_items.sort(key=lambda x: slot_order.index(x.slot) if x.slot in slot_order else 99)
+        for item in novice_items:
+            row = [item.tier, item.style, item.set_name, item.slot, item.item_name]
+            for stat in ALL_STATS:
+                row.append(item.stats.get(stat, 0))
+            row += [item.model_name, item.model_color]
+            writer.writerow(row)
+        # Novice totals
+        row = [0, "Novice", "Novice", "TOTAL", "Novice Full Set"]
+        for stat in ALL_STATS:
+            row.append(sum(i.stats.get(stat, 0) for i in novice_items))
+        row += ["", ""]
+        writer.writerow(row)
+        
+        # Each style
+        for style in ["Melee", "Ranged", "Magic"]:
+            writer.writerow([])
+            writer.writerow([f"--- {style.upper()} ---"])
+            style_items = [i for i in items if i.style == style]
+            
+            for tier in [3, 2, 1]:
+                tier_items = [i for i in style_items if i.tier == tier]
+                tier_items.sort(key=lambda x: slot_order.index(x.slot) if x.slot in slot_order else 99)
+                for item in tier_items:
+                    row = [item.tier, item.style, item.set_name, item.slot, item.item_name]
+                    for stat in ALL_STATS:
+                        row.append(item.stats.get(stat, 0))
+                    row += [item.model_name, item.model_color]
+                    writer.writerow(row)
+                # Tier totals
+                row = [tier, style, SET_NAMES[style][tier], "TOTAL", f"{SET_NAMES[style][tier]} Full Set"]
+                for stat in ALL_STATS:
+                    row.append(sum(i.stats.get(stat, 0) for i in tier_items))
+                row += ["", ""]
+                writer.writerow(row)
+        
+        # Tribrid Accessories
+        writer.writerow([])
+        writer.writerow(["--- TRIBRID ACCESSORIES ---"])
+        tribrid_items = [i for i in items if i.style == "Tribrid"]
+        for tier in [3, 2, 1]:
+            tier_items = [i for i in tribrid_items if i.tier == tier]
+            for item in tier_items:
+                row = [item.tier, item.style, item.set_name, item.slot, item.item_name]
+                for stat in ALL_STATS:
+                    row.append(item.stats.get(stat, 0))
+                row += [item.model_name, item.model_color]
+                writer.writerow(row)
+    
+    print(f"Armor CSV exported to {filename}")
+    print(f"Total armor items: {len(items)}")
+
+
+def export_weapons_csv(filename: str):
+    """Export all weapon items to CSV."""
+    weapons = generate_tiered_weapons()
+    
+    weapon_headers = [
+        "Tier", "Style", "Item Name", "Base Name", "OSRS Name", "Slot",
+        "Stab Atk", "Slash Atk", "Crush Atk", "Magic Atk", "Ranged Atk",
+        "Stab Def", "Slash Def", "Crush Def", "Magic Def", "Ranged Def",
+        "Melee Str", "Ranged Str", "Magic Dmg %", "Prayer",
+        "Atk Speed", "Atk Range", "Spec Cost", "Notes"
+    ]
+    
+    stat_keys = [
+        "stab_attack", "slash_attack", "crush_attack", "magic_attack", "ranged_attack",
+        "stab_defence", "slash_defence", "crush_defence", "magic_defence", "ranged_defence",
+        "melee_strength", "ranged_strength", "magic_damage", "prayer",
+        "attack_speed", "attack_range", "special_cost"
+    ]
+    
+    with open(filename, 'w', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(weapon_headers)
+        
+        # Group by style, then tier
+        for style_label, style_key in [("MELEE", "melee"), ("RANGED", "ranged"), ("MAGIC", "magic")]:
+            writer.writerow([])
+            writer.writerow([f"--- {style_label} WEAPONS ---"])
+            
+            style_weapons = [w for w in weapons if w.get("style") == style_key]
+            
+            # Sort by base weapon name, then tier
+            style_weapons.sort(key=lambda w: (w.get("base_name", ""), w.get("tier", 0)))
+            
+            for w in style_weapons:
+                row = [
+                    w.get("tier", ""),
+                    w.get("style", ""),
+                    w.get("item_name", ""),
+                    w.get("base_name", ""),
+                    w.get("osrs", ""),
+                    w.get("slot", ""),
+                ]
+                for stat in stat_keys:
+                    row.append(w.get(stat, 0))
+                row.append(w.get("notes", ""))
+                writer.writerow(row)
+    
+    print(f"Weapons CSV exported to {filename}")
+    print(f"Total weapon entries: {len(weapons)}")
+
+
+# =============================================================================
+# Main
+# =============================================================================
+
+if __name__ == "__main__":
+    export_armor_csv("/home/claude/tick_perfect_armor.csv")
+    export_weapons_csv("/home/claude/tick_perfect_weapons.csv")

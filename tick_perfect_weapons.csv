@@ -1,0 +1,103 @@
+Tier,Style,Item Name,Base Name,OSRS Name,Slot,Stab Atk,Slash Atk,Crush Atk,Magic Atk,Ranged Atk,Stab Def,Slash Def,Crush Def,Magic Def,Ranged Def,Melee Str,Ranged Str,Magic Dmg %,Prayer,Atk Speed,Atk Range,Spec Cost,Notes
+
+--- MELEE WEAPONS ---
+1,melee,Sentinel Aegis,Aegis,Avernic Defender,shield (1h),24,23,22,-7,-5,15,14,14,-4,-2,6,0,0,1,0,0,0,T1 (80%): BiS melee offhand
+2,melee,Vanguard Aegis,Aegis,Avernic Defender,shield (1h),27,26,25,-6,-4,15,14,14,-4,-2,7,0,0,2,0,0,0,T2 (90%): BiS melee offhand
+3,melee,Ravager Aegis,Aegis,Avernic Defender,shield (1h),33,32,31,-4,-3,15,14,14,-4,-2,9,0,0,3,0,0,0,T3 (110%): BiS melee offhand
+1,melee,Sentinel Deathsweep,Deathsweep,Scythe of Vitur,weapon (2h),56,100,24,-8,0,0,0,0,0,0,60,0,0,1,5,1,0,T1 (80%): Multi-hit 3 targets 100/50/25% damage; NO SPEC
+2,melee,Vanguard Deathsweep,Deathsweep,Scythe of Vitur,weapon (2h),63,112,27,-7,0,0,0,0,0,0,68,0,0,2,5,1,0,T2 (90%): Multi-hit 3 targets 100/50/25% damage; NO SPEC
+3,melee,Ravager Deathsweep,Deathsweep,Scythe of Vitur,weapon (2h),77,138,33,-5,0,0,0,0,0,0,83,0,0,3,5,1,0,T3 (110%): Multi-hit 3 targets 100/50/25% damage; NO SPEC
+1,melee,Sentinel Divineblade,Divineblade,Saradomin Godsword,weapon (2h),0,105,64,0,0,0,0,0,0,0,105,0,0,1,6,1,50,"T1 (80%): Spec: +10% dmg, heals 50% damage, restores 25% as spirit"
+2,melee,Vanguard Divineblade,Divineblade,Saradomin Godsword,weapon (2h),0,119,72,0,0,0,0,0,0,0,119,0,0,2,6,1,50,"T2 (90%): Spec: +10% dmg, heals 50% damage, restores 25% as spirit"
+3,melee,Ravager Divineblade,Divineblade,Saradomin Godsword,weapon (2h),0,146,88,0,0,0,0,0,0,0,146,0,0,3,6,1,50,"T3 (110%): Spec: +10% dmg, heals 50% damage, restores 25% as spirit"
+1,melee,Sentinel Dueling Dagger,Dueling Dagger,Dragon Dagger,weapon (1h),32,20,-5,0,0,0,0,0,0,0,32,0,0,1,4,1,25,T1 (80%): Spec: 2x hits +15% acc +15% dmg each
+2,melee,Vanguard Dueling Dagger,Dueling Dagger,Dragon Dagger,weapon (1h),36,22,-4,1,0,0,0,0,0,0,36,0,0,2,4,1,25,T2 (90%): Spec: 2x hits +15% acc +15% dmg each
+3,melee,Ravager Dueling Dagger,Dueling Dagger,Dragon Dagger,weapon (1h),44,28,-3,2,0,0,0,0,0,0,44,0,0,3,4,1,25,T3 (110%): Spec: 2x hits +15% acc +15% dmg each
+1,melee,Sentinel Glaive,Glaive,Noxious Halberd,weapon (2h),64,105,0,0,0,0,0,0,0,0,113,0,0,1,5,2,0,T1 (80%): 5-tick halberd; 33% envenom chance; NO SPEC
+2,melee,Vanguard Glaive,Glaive,Noxious Halberd,weapon (2h),72,119,0,0,0,0,0,0,0,0,128,0,0,2,5,2,0,T2 (90%): 5-tick halberd; 33% envenom chance; NO SPEC
+3,melee,Ravager Glaive,Glaive,Noxious Halberd,weapon (2h),88,146,0,0,0,0,0,0,0,0,157,0,0,3,5,2,0,T3 (110%): 5-tick halberd; 33% envenom chance; NO SPEC
+1,melee,Sentinel Guardbane,Guardbane,Bandos Godsword,weapon (2h),0,105,64,0,0,0,0,0,0,0,105,0,0,1,6,1,50,"T1 (80%): Spec: +21% dmg, drains combat stats = damage"
+2,melee,Vanguard Guardbane,Guardbane,Bandos Godsword,weapon (2h),0,119,72,0,0,0,0,0,0,0,119,0,0,2,6,1,50,"T2 (90%): Spec: +21% dmg, drains combat stats = damage"
+3,melee,Ravager Guardbane,Guardbane,Bandos Godsword,weapon (2h),0,146,88,0,0,0,0,0,0,0,146,0,0,3,6,1,50,"T3 (110%): Spec: +21% dmg, drains combat stats = damage"
+1,melee,Sentinel Jaggstab,Jaggstab,Osmumten's Fang,weapon (1h),84,60,0,0,0,0,0,0,0,0,82,0,0,1,5,1,0,T1 (80%): Double accuracy roll; damage 15-85% of max; NO SPEC
+2,melee,Vanguard Jaggstab,Jaggstab,Osmumten's Fang,weapon (1h),94,68,0,0,0,0,0,0,0,0,93,0,0,2,5,1,0,T2 (90%): Double accuracy roll; damage 15-85% of max; NO SPEC
+3,melee,Ravager Jaggstab,Jaggstab,Osmumten's Fang,weapon (1h),116,83,0,0,0,0,0,0,0,0,114,0,0,3,5,1,0,T3 (110%): Double accuracy roll; damage 15-85% of max; NO SPEC
+1,melee,Sentinel Moonblade,Moonblade,Blade of Saeldor,weapon (1h),44,75,0,0,0,0,0,0,0,0,71,0,0,1,4,1,0,T1 (80%): BiS slash 1H weapon
+2,melee,Vanguard Moonblade,Moonblade,Blade of Saeldor,weapon (1h),50,85,0,0,0,0,0,0,0,0,80,0,0,2,4,1,0,T2 (90%): BiS slash 1H weapon
+3,melee,Ravager Moonblade,Moonblade,Blade of Saeldor,weapon (1h),61,104,0,0,0,0,0,0,0,0,98,0,0,3,4,1,0,T3 (110%): BiS slash 1H weapon
+1,melee,Sentinel Quickblade,Quickblade,Swift Blade,weapon (1h),1,1,1,0,0,0,0,0,0,0,1,0,0,1,3,1,0,T1 (80%): Fastest melee (3-tick); no base stat bonuses; gets +1/+2/+3 per tier
+2,melee,Vanguard Quickblade,Quickblade,Swift Blade,weapon (1h),2,2,2,0,0,0,0,0,0,0,2,0,0,2,3,1,0,T2 (90%): Fastest melee (3-tick); no base stat bonuses; gets +1/+2/+3 per tier
+3,melee,Ravager Quickblade,Quickblade,Swift Blade,weapon (1h),3,3,3,0,0,0,0,0,0,0,3,0,0,3,3,1,0,T3 (110%): Fastest melee (3-tick); no base stat bonuses; gets +1/+2/+3 per tier
+1,melee,Sentinel Reachblade,Reachblade,Crystal Halberd,weapon (2h),68,88,4,-5,0,0,0,0,0,0,94,0,0,1,7,2,30,"T1 (80%): Spec: +10% dmg, 2x on large monsters"
+2,melee,Vanguard Reachblade,Reachblade,Crystal Halberd,weapon (2h),76,99,4,-4,0,0,0,0,0,0,106,0,0,2,7,2,30,"T2 (90%): Spec: +10% dmg, 2x on large monsters"
+3,melee,Ravager Reachblade,Reachblade,Crystal Halberd,weapon (2h),94,122,6,-3,0,0,0,0,0,0,130,0,0,3,7,2,30,"T3 (110%): Spec: +10% dmg, 2x on large monsters"
+1,melee,Sentinel Rippers,Rippers,Dragon Claws,weapon (2h),32,45,-5,0,0,0,0,0,0,0,44,0,0,1,4,1,50,T1 (80%): Spec: 4x hits with 4-2-1-1 damage split
+2,melee,Vanguard Rippers,Rippers,Dragon Claws,weapon (2h),37,51,-4,0,0,0,0,0,0,0,50,0,0,2,4,1,50,T2 (90%): Spec: 4x hits with 4-2-1-1 damage split
+3,melee,Ravager Rippers,Rippers,Dragon Claws,weapon (2h),46,63,-3,0,0,0,0,0,0,0,62,0,0,3,4,1,50,T3 (110%): Spec: 4x hits with 4-2-1-1 damage split
+1,melee,Sentinel Titanbreaker,Titanbreaker,Elder Maul,weapon (2h),0,0,108,0,0,0,0,0,0,0,117,0,0,1,6,1,50,"T1 (80%): Spec: +25% acc, -35% target Defence"
+2,melee,Vanguard Titanbreaker,Titanbreaker,Elder Maul,weapon (2h),0,0,122,0,0,0,0,0,0,0,132,0,0,2,6,1,50,"T2 (90%): Spec: +25% acc, -35% target Defence"
+3,melee,Ravager Titanbreaker,Titanbreaker,Elder Maul,weapon (2h),0,0,149,0,0,0,0,0,0,0,162,0,0,3,6,1,50,"T3 (110%): Spec: +25% acc, -35% target Defence"
+
+--- RANGED WEAPONS ---
+1,ranged,Scout Aimguard,Aimguard,Twisted Buckler,shield (1h),-10,-12,-14,0,8,-10,-11,-13,24,-8,0,0,0,1,0,0,0,T1 (80%): BiS ranged offhand
+2,ranged,Hunter Aimguard,Aimguard,Twisted Buckler,shield (1h),-9,-10,-12,0,9,-10,-11,-13,24,-8,0,0,0,2,0,0,0,T2 (90%): BiS ranged offhand
+3,ranged,Reaper Aimguard,Aimguard,Twisted Buckler,shield (1h),-7,-8,-10,0,11,-10,-11,-13,24,-8,0,0,0,3,0,0,0,T3 (110%): BiS ranged offhand
+1,ranged,Scout Arrows (Arrows),Arrows (Arrows),Ammo (Arrows),ammo,0,0,0,0,0,0,0,0,0,0,0,48,0,1,0,0,0,T1 (80%): Dragon arrows; for bows
+2,ranged,Hunter Arrows (Arrows),Arrows (Arrows),Ammo (Arrows),ammo,0,0,0,0,0,0,0,0,0,0,0,54,0,2,0,0,0,T2 (90%): Dragon arrows; for bows
+3,ranged,Reaper Arrows (Arrows),Arrows (Arrows),Ammo (Arrows),ammo,0,0,0,0,0,0,0,0,0,0,0,66,0,3,0,0,0,T3 (110%): Dragon arrows; for bows
+1,ranged,Scout Arrows (Bolts),Arrows (Bolts),Ammo (Bolts),ammo,0,0,0,0,0,0,0,0,0,0,0,97,0,1,0,0,0,T1 (80%): Dragon bolts; for crossbows
+2,ranged,Hunter Arrows (Bolts),Arrows (Bolts),Ammo (Bolts),ammo,0,0,0,0,0,0,0,0,0,0,0,110,0,2,0,0,0,T2 (90%): Dragon bolts; for crossbows
+3,ranged,Reaper Arrows (Bolts),Arrows (Bolts),Ammo (Bolts),ammo,0,0,0,0,0,0,0,0,0,0,0,135,0,3,0,0,0,T3 (110%): Dragon bolts; for crossbows
+1,ranged,Scout Arrows (Darts),Arrows (Darts),Ammo (Darts),ammo,0,0,0,0,0,0,0,0,0,0,0,28,0,1,0,0,0,T1 (80%): Dragon darts; for blowpipe
+2,ranged,Hunter Arrows (Darts),Arrows (Darts),Ammo (Darts),ammo,0,0,0,0,0,0,0,0,0,0,0,32,0,2,0,0,0,T2 (90%): Dragon darts; for blowpipe
+3,ranged,Reaper Arrows (Darts),Arrows (Darts),Ammo (Darts),ammo,0,0,0,0,0,0,0,0,0,0,0,39,0,3,0,0,0,T3 (110%): Dragon darts; for blowpipe
+1,ranged,Scout Crackshot,Crackshot,Tonalztics of Ralos,weapon (2h),0,0,0,0,72,0,0,0,0,0,0,60,0,1,4,6,50,T1 (80%): Spec: reduces target defenses
+2,ranged,Hunter Crackshot,Crackshot,Tonalztics of Ralos,weapon (2h),0,0,0,0,81,0,0,0,0,0,0,68,0,2,4,6,50,T2 (90%): Spec: reduces target defenses
+3,ranged,Reaper Crackshot,Crackshot,Tonalztics of Ralos,weapon (2h),0,0,0,0,100,0,0,0,0,0,0,83,0,3,4,6,50,T3 (110%): Spec: reduces target defenses
+1,ranged,Scout Deathshot,Deathshot,Twisted Bow,weapon (2h),0,0,0,0,56,0,0,0,0,0,0,16,0,1,5,10,0,T1 (80%): Scales accuracy/damage with target magic level
+2,ranged,Hunter Deathshot,Deathshot,Twisted Bow,weapon (2h),0,0,0,0,63,0,0,0,0,0,0,18,0,2,5,10,0,T2 (90%): Scales accuracy/damage with target magic level
+3,ranged,Reaper Deathshot,Deathshot,Twisted Bow,weapon (2h),0,0,0,0,77,0,0,0,0,0,0,22,0,3,5,10,0,T3 (110%): Scales accuracy/damage with target magic level
+1,ranged,Scout Moonbow,Moonbow,Bow of Faerdhinen,weapon (2h),0,0,0,0,102,0,0,0,0,0,0,84,0,1,5,10,0,T1 (80%): Crystal bow; built-in ammo
+2,ranged,Hunter Moonbow,Moonbow,Bow of Faerdhinen,weapon (2h),0,0,0,0,115,0,0,0,0,0,0,95,0,2,5,10,0,T2 (90%): Crystal bow; built-in ammo
+3,ranged,Reaper Moonbow,Moonbow,Bow of Faerdhinen,weapon (2h),0,0,0,0,141,0,0,0,0,0,0,117,0,3,5,10,0,T3 (110%): Crystal bow; built-in ammo
+1,ranged,Scout Quickbow,Quickbow,Toxic Blowpipe,weapon (2h),0,0,0,0,24,0,0,0,0,0,0,16,0,1,3,5,0,T1 (80%): Fastest ranged (3-tick); NO SPEC
+2,ranged,Hunter Quickbow,Quickbow,Toxic Blowpipe,weapon (2h),0,0,0,0,27,0,0,0,0,0,0,18,0,2,3,5,0,T2 (90%): Fastest ranged (3-tick); NO SPEC
+3,ranged,Reaper Quickbow,Quickbow,Toxic Blowpipe,weapon (2h),0,0,0,0,33,0,0,0,0,0,0,22,0,3,3,5,0,T3 (110%): Fastest ranged (3-tick); NO SPEC
+1,ranged,Scout Razors,Razors,Dragon Knives,weapon (1h),0,0,0,0,22,0,0,0,0,0,0,24,0,1,3,4,25,T1 (80%): Fast thrown; spec: 2x hits +25% acc
+2,ranged,Hunter Razors,Razors,Dragon Knives,weapon (1h),0,0,0,0,25,0,0,0,0,0,0,27,0,2,3,4,25,T2 (90%): Fast thrown; spec: 2x hits +25% acc
+3,ranged,Reaper Razors,Razors,Dragon Knives,weapon (1h),0,0,0,0,31,0,0,0,0,0,0,33,0,3,3,4,25,T3 (110%): Fast thrown; spec: 2x hits +25% acc
+1,ranged,Scout Scatterboom,Scatterboom,Black Chinchompa,weapon (2h),0,0,0,0,64,0,0,0,0,0,0,24,0,1,3,9,50,T1 (80%): AoE; Spec: delayed 4-tick detonation 2x damage
+2,ranged,Hunter Scatterboom,Scatterboom,Black Chinchompa,weapon (2h),0,0,0,0,72,0,0,0,0,0,0,27,0,2,3,9,50,T2 (90%): AoE; Spec: delayed 4-tick detonation 2x damage
+3,ranged,Reaper Scatterboom,Scatterboom,Black Chinchompa,weapon (2h),0,0,0,0,88,0,0,0,0,0,0,33,0,3,3,9,50,T3 (110%): AoE; Spec: delayed 4-tick detonation 2x damage
+1,ranged,Scout Stillshot,Stillshot,Scorching Bow,weapon (2h),0,0,0,0,55,0,0,0,0,0,0,0,0,1,5,10,25,T1 (80%): Spec: freezes target 10 ticks; no passive
+2,ranged,Hunter Stillshot,Stillshot,Scorching Bow,weapon (2h),0,0,0,0,62,0,0,0,0,0,0,0,0,2,5,10,25,T2 (90%): Spec: freezes target 10 ticks; no passive
+3,ranged,Reaper Stillshot,Stillshot,Scorching Bow,weapon (2h),0,0,0,0,76,0,0,0,0,0,0,0,0,3,5,10,25,T3 (110%): Spec: freezes target 10 ticks; no passive
+1,ranged,Scout Windbow,Windbow,Webweaver Bow,weapon (2h),0,0,0,0,56,0,0,0,0,0,0,0,0,1,4,10,0,T1 (80%): 4-tick shortbow; NO SPEC
+2,ranged,Hunter Windbow,Windbow,Webweaver Bow,weapon (2h),0,0,0,0,63,0,0,0,0,0,0,0,0,2,4,10,0,T2 (90%): 4-tick shortbow; NO SPEC
+3,ranged,Reaper Windbow,Windbow,Webweaver Bow,weapon (2h),0,0,0,0,77,0,0,0,0,0,0,0,0,3,4,10,0,T3 (110%): 4-tick shortbow; NO SPEC
+
+--- MAGIC WEAPONS ---
+1,magic,Initiate Blastrod,Blastrod,Volatile Nightmare Staff,weapon (2h),0,0,0,12,0,0,0,0,0,0,0,0,12,1,5,8,55,T1 (80%): Spec: high burst magic damage
+2,magic,Nova Blastrod,Blastrod,Volatile Nightmare Staff,weapon (2h),0,0,0,14,0,0,0,0,0,0,0,0,14,2,5,8,55,T2 (90%): Spec: high burst magic damage
+3,magic,Oblivion Blastrod,Blastrod,Volatile Nightmare Staff,weapon (2h),0,0,0,18,0,0,0,0,0,0,0,0,17,3,5,8,55,T3 (110%): Spec: high burst magic damage
+1,magic,Initiate Deathknell,Deathknell,Tumeken's Shadow,weapon (2h),0,0,0,28,0,0,0,0,0,0,0,0,0,1,5,8,0,T1 (80%): 3x magic gear bonus; most powerful magic weapon
+2,magic,Nova Deathknell,Deathknell,Tumeken's Shadow,weapon (2h),0,0,0,32,0,0,0,0,0,0,0,0,0,2,5,8,0,T2 (90%): 3x magic gear bonus; most powerful magic weapon
+3,magic,Oblivion Deathknell,Deathknell,Tumeken's Shadow,weapon (2h),0,0,0,39,0,0,0,0,0,0,0,0,0,3,5,8,0,T3 (110%): 3x magic gear bonus; most powerful magic weapon
+1,magic,Initiate Hexsceptre,Hexsceptre,Accursed Sceptre,weapon (1h),0,0,0,16,0,0,0,0,0,0,0,0,0,1,4,8,50,T1 (80%): Powered; spec drains def/magic
+2,magic,Nova Hexsceptre,Hexsceptre,Accursed Sceptre,weapon (1h),0,0,0,18,0,0,0,0,0,0,0,0,0,2,4,8,50,T2 (90%): Powered; spec drains def/magic
+3,magic,Oblivion Hexsceptre,Hexsceptre,Accursed Sceptre,weapon (1h),0,0,0,22,0,0,0,0,0,0,0,0,0,3,4,8,50,T3 (110%): Powered; spec drains def/magic
+1,magic,Initiate Kaster,Kaster,Kodai Wand,weapon (2h),0,0,0,22,0,0,0,0,0,0,0,0,12,1,4,8,0,T1 (80%): BiS autocast wand; saves runes
+2,magic,Nova Kaster,Kaster,Kodai Wand,weapon (2h),0,0,0,25,0,0,0,0,0,0,0,0,14,2,4,8,0,T2 (90%): BiS autocast wand; saves runes
+3,magic,Oblivion Kaster,Kaster,Kodai Wand,weapon (2h),0,0,0,31,0,0,0,0,0,0,0,0,17,3,4,8,0,T3 (110%): BiS autocast wand; saves runes
+1,magic,Initiate Moonstave,Moonstave,Sanguinesti Staff,weapon (1h),0,0,0,20,0,0,0,0,0,0,0,0,0,1,4,8,0,T1 (80%): Powered staff; scales with magic level; NO healing passive
+2,magic,Nova Moonstave,Moonstave,Sanguinesti Staff,weapon (1h),0,0,0,22,0,0,0,0,0,0,0,0,0,2,4,8,0,T2 (90%): Powered staff; scales with magic level; NO healing passive
+3,magic,Oblivion Moonstave,Moonstave,Sanguinesti Staff,weapon (1h),0,0,0,28,0,0,0,0,0,0,0,0,0,3,4,8,0,T3 (110%): Powered staff; scales with magic level; NO healing passive
+1,magic,Initiate Quickstave,Quickstave,Eye of Ayak,weapon (1h),0,0,0,12,0,0,0,0,0,0,0,0,0,1,3,8,0,T1 (80%): Fastest magic (3-tick); powered staff
+2,magic,Nova Quickstave,Quickstave,Eye of Ayak,weapon (1h),0,0,0,14,0,0,0,0,0,0,0,0,0,2,3,8,0,T2 (90%): Fastest magic (3-tick); powered staff
+3,magic,Oblivion Quickstave,Quickstave,Eye of Ayak,weapon (1h),0,0,0,18,0,0,0,0,0,0,0,0,0,3,3,8,0,T3 (110%): Fastest magic (3-tick); powered staff
+1,magic,Initiate Soulstave,Soulstave,Eldritch Nightmare Staff,weapon (2h),0,0,0,12,0,0,0,0,0,0,0,0,12,1,5,8,55,T1 (80%): Spec: restores spirit based on damage
+2,magic,Nova Soulstave,Soulstave,Eldritch Nightmare Staff,weapon (2h),0,0,0,14,0,0,0,0,0,0,0,0,14,2,5,8,55,T2 (90%): Spec: restores spirit based on damage
+3,magic,Oblivion Soulstave,Soulstave,Eldritch Nightmare Staff,weapon (2h),0,0,0,18,0,0,0,0,0,0,0,0,17,3,5,8,55,T3 (110%): Spec: restores spirit based on damage
+1,magic,Initiate Spellward,Spellward,Fortified Elidinis Ward,shield (1h),0,0,0,20,0,26,28,36,1,26,0,0,4,1,0,0,0,T1 (80%): BiS magic offhand
+2,magic,Nova Spellward,Spellward,Fortified Elidinis Ward,shield (1h),0,0,0,22,0,26,28,36,1,26,0,0,4,2,0,0,0,T2 (90%): BiS magic offhand
+3,magic,Oblivion Spellward,Spellward,Fortified Elidinis Ward,shield (1h),0,0,0,28,0,26,28,36,1,26,0,0,6,3,0,0,0,T3 (110%): BiS magic offhand
