@@ -1,17 +1,10 @@
 Tier,Style,Set Name,Slot,Item Name,stab_attack,slash_attack,crush_attack,magic_attack,ranged_attack,stab_defence,slash_defence,crush_defence,magic_defence,ranged_defence,melee_strength,ranged_strength,magic_strength,prayer,weight,Model,Color
-=== OSRS BiS Reference ===
 BiS,Melee,OSRS Melee BiS,Set Total,OSRS Melee BiS,80,117,78,-45,-51,293,366,283,9,261,72,0,0,4,25,,
 BiS,Ranged,OSRS Ranged BiS,Set Total,OSRS Ranged BiS,-10,-11,-10,-6,176,153,149,170,173,221,0,72,0,4,15,,
 BiS,Magic,OSRS Magic BiS,Set Total,OSRS Magic BiS,-10,-10,-10,152,-12,134,127,146,202,72,0,0,28,4,10,,
-
-=== Tier 3 Base (Defence Halved) ===
 T3 Base,Melee,TP Melee T3,Set Total,TP Melee Tier 3 Base,80,117,78,-45,-51,146.5,183.0,141.5,4.5,130.5,72,0,0,4,25,Nordic,White/Brown
 T3 Base,Ranged,TP Ranged T3,Set Total,TP Ranged Tier 3 Base,-10,-11,-10,-6,176,76.5,74.5,85.0,86.5,110.5,0,72,0,4,15,Reaper,Green
 T3 Base,Magic,TP Magic T3,Set Total,TP Magic Tier 3 Base,-10,-10,-10,152,-12,67.0,63.5,73.0,101.0,36.0,0,0,28,4,10,Shadow Mage,Blue
-
-=== Individual Items ===
-
---- NOVICE ---
 0,Novice,Novice,Head,Novice Cap,2,3,2,4,5,4,5,4,3,4,2,2,0,0,0,None,None
 0,Novice,Novice,Chest,Novice Vest,6,9,7,12,11,11,13,9,7,10,6,6,6,0,0,None,None
 0,Novice,Novice,Legs,Novice Pants,3,4,2,5,6,5,6,5,3,4,2,2,1,0,0,None,None
@@ -21,8 +14,6 @@ T3 Base,Magic,TP Magic T3,Set Total,TP Magic Tier 3 Base,-10,-10,-10,152,-12,67.
 0,Novice,Novice,Amulet,Amulet of Beginning,2,3,2,4,5,4,5,4,3,3,2,2,0,0,0,None,None
 0,Novice,Novice,Ring,Ring of First Steps,2,3,2,4,5,4,5,4,3,3,2,2,0,0,0,None,None
 0,Novice,Novice,TOTAL,Novice Full Set,20,29,19,38,44,37,46,35,25,33,18,18,7,0,0,,
-
---- MELEE ---
 3,Melee,Ravager,Head,Ravager Helm,10,15,10,-6,-7,19,23,18,0,16,9,0,0,0,2,Nordic,White/Brown
 3,Melee,Ravager,Chest,Ravager Chestplate,16,24,18,-5,-5,30,38,29,4,27,16,0,0,0,2,Nordic,White/Brown
 3,Melee,Ravager,Legs,Ravager Platelegs,12,17,11,-7,-8,21,27,21,0,19,10,0,0,0,2,Nordic,White/Brown
@@ -44,8 +35,6 @@ T3 Base,Magic,TP Magic T3,Set Total,TP Magic Tier 3 Base,-10,-10,-10,152,-12,67.
 1,Melee,Sentinel,Gloves,Sentinel Gauntlets,3,5,3,-5,-6,6,8,6,0,5,3,0,0,0,0,Sentinel,Grey
 1,Melee,Sentinel,Cape,Sentinel Cape,6,8,5,-8,-9,10,13,10,0,9,5,0,0,1,0,Sentinel,Grey
 1,Melee,Sentinel,TOTAL,Sentinel Full Set,38,54,37,-47,-53,68,84,65,3,60,33,0,0,1,0,,
-
---- RANGED ---
 3,Ranged,Reaper,Head,Reaper Coif,-2,-2,-2,-1,22,9,9,11,11,14,0,9,0,0,2,Reaper,Green
 3,Ranged,Reaper,Chest,Reaper Body,2,2,2,1,34,17,17,18,19,23,0,16,0,0,2,Reaper,Green
 3,Ranged,Reaper,Legs,Reaper Chaps,-2,-2,-2,-1,26,11,11,12,12,16,0,10,0,0,2,Reaper,Green
@@ -67,8 +56,6 @@ T3 Base,Magic,TP Magic T3,Set Total,TP Magic Tier 3 Base,-10,-10,-10,152,-12,67.
 1,Ranged,Scout,Gloves,Scout Vambraces,-2,-2,-2,-1,7,3,3,3,3,4,0,3,0,0,0,Thief,Brown
 1,Ranged,Scout,Cape,Scout Cloak,-2,-2,-2,-2,13,5,5,6,6,8,0,5,0,1,0,Thief,Brown
 1,Ranged,Scout,TOTAL,Scout Full Set,-10,-11,-10,-4,82,36,35,39,40,52,0,33,0,1,0,,
-
---- MAGIC ---
 3,Magic,Oblivion,Head,Oblivion Hood,-2,-2,-2,19,-2,8,8,9,13,4,0,0,3,0,2,Shadow Mage,Blue
 3,Magic,Oblivion,Chest,Oblivion Robe Top,2,2,2,30,1,14,15,17,20,10,0,0,8,0,2,Shadow Mage,Blue
 3,Magic,Oblivion,Legs,Oblivion Robe Bottom,-2,-2,-2,22,-2,10,9,10,15,5,0,0,4,0,2,Shadow Mage,Blue
@@ -90,8 +77,6 @@ T3 Base,Magic,TP Magic T3,Set Total,TP Magic Tier 3 Base,-10,-10,-10,152,-12,67.
 1,Magic,Initiate,Gloves,Initiate Sleeves,-2,-2,-2,6,-2,3,2,3,4,1,0,0,1,0,0,Tomb Seeker,Cyan
 1,Magic,Initiate,Cape,Initiate Mantle,-2,-2,-2,11,-3,5,4,5,7,2,0,0,2,1,0,Tomb Seeker,Cyan
 1,Magic,Initiate,TOTAL,Initiate Full Set,-10,-10,-10,71,-11,32,30,34,47,18,0,0,13,1,0,,
-
---- TRIBRID ACCESSORIES ---
 3,Tribrid,Tribrid,Amulet,Amulet of Madness,8,15,8,16,18,0,0,0,0,0,12,12,4,3,2,None,None
 3,Tribrid,Tribrid,Ring,Ring of Despair,8,15,8,16,18,0,0,0,0,0,12,12,4,3,2,None,None
 3,Tribrid,Achievement,Cape,Champion's Shroud,10,14,9,19,22,18,22,17,12,16,9,9,3,3,2,None,None
